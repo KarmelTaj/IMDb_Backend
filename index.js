@@ -2,9 +2,12 @@ const express = require('express');
 const postgres = require('postgres');
 require('dotenv').config();
 const app = express();
+const cors = require('cors');
 
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
+
 
 app.use(function (_, res, next) {
   res.setHeader('Access-Control-Allow-Origin', '*');
