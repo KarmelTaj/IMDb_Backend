@@ -41,52 +41,70 @@ async function getPgVersion() {
 getPgVersion();
 
 app.get('/movies', async (_, response) => {
-  const movies = await sql`select * from movies`;
-  response.send(movies);
+  try {
+    const movies = await sql`select * from movies`;
+    response.send(movies);
+  } catch (error) {
+    response.send('Internal Server Error');
+  }
 });
+
 
 app.get('/movies/:id', async (request, response) => {
-  const movieId = +request.params.id;
+  try {
+    const movieId = +request.params.id;
 
-  const movieDetails = await sql`
-    SELECT
-      movies.*,
-      jsonb_agg(DISTINCT jsonb_build_object('name', stars.name, 'picture', stars.picture)) AS stars,
-      array_agg(DISTINCT genres.name) AS genres
-    FROM
-      movies
-    JOIN
-      movies_stars ON movies.id = movies_stars.movieID
-    JOIN
-      stars ON movies_stars.starID = stars.id
-    JOIN
-      movies_genres ON movies.id = movies_genres.movieID
-    JOIN
-      genres ON movies_genres.genreID = genres.id
-    WHERE
-      movies.id = ${movieId}
-    GROUP BY
-      movies.id;
-  `;
+    const movieDetails = await sql`
+          SELECT
+              movies.*,
+              jsonb_agg(DISTINCT jsonb_build_object('name', stars.name, 'picture', stars.picture)) AS stars,
+              array_agg(DISTINCT genres.name) AS genres
+          FROM
+              movies
+          JOIN
+              movies_stars ON movies.id = movies_stars.movieID
+          JOIN
+              stars ON movies_stars.starID = stars.id
+          JOIN
+              movies_genres ON movies.id = movies_genres.movieID
+          JOIN
+              genres ON movies_genres.genreID = genres.id
+          WHERE
+              movies.id = ${movieId}
+          GROUP BY
+              movies.id;
+      `;
 
-  // Since we're querying a single movie, movieDetails will be an array with one element
-  const movie = movieDetails[0];
+    // Since we're querying a single movie, movieDetails will be an array with one element
+    const movie = movieDetails[0];
 
-  response.send(movie);
+    if (movie) {
+      response.send(movie);
+    } else {
+      response.send('Movie not found');
+    }
+  } catch (error) {
+    response.send('Internal Server Error');
+  }
 });
+
 
 
 app.post('/login', async (request, response) => {
-  const { username, password } = request.body;
-  // const headers = request.headers;
-  // console.log(headers);
-  const foundUser = await sql`SELECT * FROM users WHERE username = ${username} AND password = ${password};`;
-  if (foundUser && foundUser.length > 0) {
-    response.send({ user: {id: foundUser[0].id, username: foundUser[0].username, isadmin: foundUser[0].isadmin} });
-  } else {
-    response.send({ error: true, message: 'Wrong Username and/or Password' });
+  try {
+    const { username, password } = request.body;
+    const foundUser = await sql`SELECT * FROM users WHERE username = ${username} AND password = ${password};`;
+
+    if (foundUser && foundUser.length > 0) {
+      response.send({ user: { id: foundUser[0].id, username: foundUser[0].username, isadmin: foundUser[0].isadmin } });
+    } else {
+      response.send({ error: true, message: 'Wrong Username and/or Password' });
+    }
+  } catch (error) {
+    response.send('Internal Server Error');
   }
 });
+
 
 
 app.post('/sign-up', async (request, response) => {
@@ -103,7 +121,7 @@ app.post('/sign-up', async (request, response) => {
         RETURNING *;`;
 
       if (newUser && newUser.length > 0) {
-        response.send({ user: {id: newUser[0].id, username: newUser[0].username, isadmin: newUser[0].isadmin} });
+        response.send({ user: { id: newUser[0].id, username: newUser[0].username, isadmin: newUser[0].isadmin } });
       } else {
         response.send({ success: false, message: 'Failed to create user' });
       }
@@ -170,11 +188,16 @@ app.post('/admin/add-star', async (request, response) => {
 
 
 app.get('/admin/add-movie', async (_, response) => {
-  const genres = await sql`SELECT * FROM Genres;`;
-  const stars = await sql`SELECT * FROM Stars;`;
-  const movies = await sql`SELECT title FROM movies;`;
-  response.send({ genres: genres, stars: stars, movies: movies });
+  try {
+    const genres = await sql`SELECT * FROM Genres;`;
+    const stars = await sql`SELECT * FROM Stars;`;
+    const movies = await sql`SELECT title FROM movies;`;
+    response.send({ genres: genres, stars: stars, movies: movies });
+  } catch (error) {
+    response.send('Internal Server Error');
+  }
 });
+
 
 
 app.post('/admin/add-movie', async (request, response) => {
@@ -237,15 +260,19 @@ app.post('/admin/add-movie', async (request, response) => {
       response.send({ success: false, message: 'Failed to Add Movie' });
     }
   } catch (error) {
-    console.error('Error creating movie:', error);
     response.send({ success: false, message: 'Internal server error' });
   }
 });
 
 app.get('/admin/delete-movie', async (_, response) => {
-  const movies = await sql`SELECT id, title FROM movies;`;
-  response.send({ movies });
+  try {
+    const movies = await sql`SELECT id, title FROM movies;`;
+    response.send({ movies });
+  } catch (error) {
+    response.send('Internal Server Error');
+  }
 });
+
 
 
 app.delete('/admin/delete-movie', async (request, response) => {
