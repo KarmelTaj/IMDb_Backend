@@ -35,7 +35,12 @@ const sql = postgres({
 });
 
 async function getPgVersion() {
-  const result = await sql`select version()`;
+
+  try {
+    const result = await sql`select version()`;
+  } catch (error) {
+    response.send('Internal Server Error, Getting PgVersion');
+  }
 }
 
 getPgVersion();
@@ -45,7 +50,7 @@ app.get('/movies', async (_, response) => {
     const movies = await sql`select * from movies`;
     response.send(movies);
   } catch (error) {
-    response.send('Internal Server Error');
+    response.send('Internal Server Error, Get Movies');
   }
 });
 
@@ -84,7 +89,7 @@ app.get('/movies/:id', async (request, response) => {
       response.send('Movie not found');
     }
   } catch (error) {
-    response.send('Internal Server Error');
+    response.send('Internal Server Error, Get Moive:ID');
   }
 });
 
@@ -101,7 +106,7 @@ app.post('/login', async (request, response) => {
       response.send({ error: true, message: 'Wrong Username and/or Password' });
     }
   } catch (error) {
-    response.send('Internal Server Error');
+    response.send('Internal Server Error, Post Login');
   }
 });
 
@@ -128,7 +133,7 @@ app.post('/sign-up', async (request, response) => {
     }
   } catch (error) {
     console.error('Error creating user:', error);
-    response.send({ success: false, message: 'Internal server error' });
+    response.send({ success: false, message: 'Internal server error, Post Sign up' });
   }
 });
 
@@ -153,7 +158,7 @@ app.post('/movies/:movieID/rate-movie', async (request, response) => {
       response.send({ success: false, message: 'Failed to add rating' });
     }
   } catch (error) {
-    response.send({ success: false, message: 'Internal server error' });
+    response.send({ success: false, message: 'Internal server error, Post Rate Movie' });
   }
 });
 
@@ -182,7 +187,7 @@ app.post('/admin/add-star', async (request, response) => {
     }
   } catch (error) {
     console.error('Error creating star:', error);
-    response.send({ success: false, message: 'Internal server error' });
+    response.send({ success: false, message: 'Internal server error, Post Add Star' });
   }
 });
 
@@ -194,7 +199,7 @@ app.get('/admin/add-movie', async (_, response) => {
     const movies = await sql`SELECT title FROM movies;`;
     response.send({ genres: genres, stars: stars, movies: movies });
   } catch (error) {
-    response.send('Internal Server Error');
+    response.send('Internal Server Error, Get Add Movie');
   }
 });
 
@@ -260,7 +265,7 @@ app.post('/admin/add-movie', async (request, response) => {
       response.send({ success: false, message: 'Failed to Add Movie' });
     }
   } catch (error) {
-    response.send({ success: false, message: 'Internal server error' });
+    response.send({ success: false, message: 'Internal server error, Post Add Movie' });
   }
 });
 
@@ -269,7 +274,7 @@ app.get('/admin/delete-movie', async (_, response) => {
     const movies = await sql`SELECT id, title FROM movies;`;
     response.send({ movies });
   } catch (error) {
-    response.send('Internal Server Error');
+    response.send('Internal Server Error, Get Delet Movie');
   }
 });
 
@@ -291,7 +296,7 @@ app.delete('/admin/delete-movie', async (request, response) => {
 
   } catch (error) {
     console.error('Error deleting movie:', error);
-    response.send({ success: false, message: 'Internal server error' });
+    response.send({ success: false, message: 'Internal server error, Delete Movie' });
   }
 });
 
